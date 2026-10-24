@@ -1,0 +1,83 @@
+/* ============================================
+   Tailwind CSS - Design Tokens (Bảng màu)
+   ============================================
+   Primary: #6F4E37 (nâu cà phê)
+   Accent: #D4A373 (caramel)
+   Background: #FAF7F2 (kem)
+   Text: #1F1A17 (chữ)
+   Border: #E8E1D9 (viền)
+   ============================================ */
+
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+/* --- Custom scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4A373;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8860B;
+}
+
+/* --- Typography --- */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Be Vietnam Pro", "Noto Sans SVN", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.2;
+  }
+}
+
+/* --- Responsive grid --- */
+.grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* --- Mobile-first bottom nav (placeholder) --- */
+.nav-mobile {
+  display: none;
+}
+
+/* --- Toast notification --- */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.toast-success {
+  background: #2D6A4F;
+  color: #fff;
+  border: 1px solid #4A7C59;
+}
+
+.toast-error {
+  background: #E74C3C;
+  color: #fff;
+  border: 1px solid #C0392B;
+}
+
+.toast-info {
+  background: #27AE60;
+  color: #fff;
+  border: 1px solid #2ECC71;
+}

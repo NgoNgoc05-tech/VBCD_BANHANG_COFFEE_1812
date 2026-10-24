@@ -1,0 +1,17 @@
+# Frontend
+node_modules/
+.env
+*.log
+*.tmp
+
+# Build output
+/dist
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+.DS_Store?
