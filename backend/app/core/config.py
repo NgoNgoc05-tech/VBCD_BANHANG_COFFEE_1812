@@ -6,7 +6,7 @@ import os
 
 class Settings(BaseSettings):
     # --- Application ---
-    APP_NAME: str = "[TÊN SHOP]"
+    APP_NAME: str = "Phin & Bean"
     APP_ENV: str = "development"
 
     # --- Database (SQLite dev, dễ dàng đổi sang MySQL qua DATABASE_URL) ---

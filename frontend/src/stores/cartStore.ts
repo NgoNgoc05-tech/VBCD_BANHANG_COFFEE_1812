@@ -109,9 +109,9 @@ export const useCart = create<CartStore>()(
       },
     }),
     {
-      name: "[TÊN SHOP]_cart",
+      name: "phin-bean-cart",
       // Chỉ persist cart items, không persist totalCents (tính toán mới)
-      // storage: createJSONStorage({ getItem: () => sessionStorage.getItem("[TÊN SHOP]_cart") }),
+      // storage: createJSONStorage({ getItem: () => sessionStorage.getItem("phin-bean-cart") }),
     }
   )
 )

@@ -1,4 +1,4 @@
-# [TÊN SHOP] - Thương mại điện tử cà phê
+# Phin & Bean - Thương mại điện tử cà phê
 
 ## Cấu trúc project
 

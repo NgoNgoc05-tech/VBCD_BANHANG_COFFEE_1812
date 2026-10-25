@@ -14,27 +14,91 @@
 
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* --- Màu nền tổng thể --- */
+    --background: #FAF7F2;
+    --foreground: #1F1A17;
+
+    /* --- Bảng màu chính --- */
+    --primary: #6F4E37;
+    --primary-foreground: #FFFFFF;
+    --accent: #D4A373;
+    --accent-foreground: #1F1A17;
+
+    /* --- Màu phụ trợ --- */
+    --secondary: #F5E9DD;
+    --secondary-foreground: #6F4E37;
+    --muted: #F5E9DD;
+    --muted-foreground: #8C7B6B;
+
+    /* --- UI --- */
+    --card: #FFFFFF;
+    --card-foreground: #1F1A17;
+    --popover: #FFFFFF;
+    --popover-foreground: #1F1A17;
+
+    --border: #E8E1D9;
+    --input: #E8E1D9;
+    --ring: #6F4E37;
+    --radius: 12px;
+
+    /* --- Trạng thái --- */
+    --success: #2D6A4F;
+    --success-foreground: #FFFFFF;
+    --destructive: #E74C3C;
+    --destructive-foreground: #FFFFFF;
+    --warning: #F4A261;
+    --warning-foreground: #1F1A17;
+  }
+
+  [data-theme="dark"] {
+    --background: #1F1A17;
+    --foreground: #FAF7F2;
+    --card: #2A1E19;
+    --card-foreground: #FAF7F2;
+    --popover: #2A1E19;
+    --popover-foreground: #FAF7F2;
+    --border: #4A423B;
+    --input: #4A423B;
+    --muted: #3A302A;
+    --muted-foreground: #AEA498;
+  }
+
+  /* --- Typography --- */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Be Vietnam Pro", "Noto Sans SVN", "Helvetica Neue", Arial,
+      sans-serif;
+    line-height: 1.2;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
 /* --- Custom scrollbar --- */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #D4A373;
+  background: var(--accent);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #B8860B;
-}
 
-/* --- Typography --- */
-@layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Be Vietnam Pro", "Noto Sans SVN", "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.2;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #b8860b;
 }
 
 /* --- Responsive grid --- */
@@ -55,29 +119,9 @@
   display: none;
 }
 
-/* --- Toast notification --- */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
-  max-width: 400px;
+/* --- Toast notification (sonner) --- */
+[data-sonner-toast] {
+  font-family: "Be Vietnam Pro", "Noto Sans SVN", "Helvetica Neue", Arial,
+    sans-serif !important;
 }
 
-.toast-success {
-  background: #2D6A4F;
-  color: #fff;
-  border: 1px solid #4A7C59;
-}
-
-.toast-error {
-  background: #E74C3C;
-  color: #fff;
-  border: 1px solid #C0392B;
-}
-
-.toast-info {
-  background: #27AE60;
-  color: #fff;
-  border: 1px solid #2ECC71;
-}

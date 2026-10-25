@@ -13,7 +13,7 @@ export interface AuthStore {
   checkAuth: () => void
 }
 
-export const useAuth = create<AuthStore>()(
+export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
@@ -26,6 +26,7 @@ export const useAuth = create<AuthStore>()(
           full_name: userData.full_name ?? "Khách hàng",
           email: userData.email ?? "",
           role: userData.role ?? "customer",
+          created_at: new Date().toISOString(),
         }
         set({ user, isAuthenticated: true, loading: false })
       },
@@ -34,18 +35,20 @@ export const useAuth = create<AuthStore>()(
         set({ user: null, isAuthenticated: false, loading: false })
       },
 
-      setUser: (user: User | null) => set({ user, isAuthenticated: user !== null, loading: false }),
+      setUser: (user: User | null) =>
+        set({ user, isAuthenticated: user !== null, loading: false }),
 
       checkAuth: async () => {
-        // Ở giai đoạn 1: localStorage simulation
-        // Ở giai đoạn 2+: gọi API /api/auth/me để đồng bộ
-        const stored = typeof window !== "undefined" ? localStorage.getItem("[TÊN SHOP]_auth") : null
+        const stored =
+          typeof window !== "undefined"
+            ? localStorage.getItem("phin-bean-auth")
+            : null
         if (stored) {
           try {
             const parsed = JSON.parse(stored)
             set({ user: parsed.user, isAuthenticated: true, loading: false })
           } catch {
-            localStorage.removeItem("[TÊN SHOP]_auth")
+            localStorage.removeItem("phin-bean-auth")
             set({ user: null, isAuthenticated: false, loading: false })
           }
         } else {
@@ -54,7 +57,11 @@ export const useAuth = create<AuthStore>()(
       },
     }),
     {
-      name: "[TÊN SHOP]_auth",
+      name: "phin-bean-auth",
     }
   )
 )
+
+export const useStore = useAuthStore
+
+export { useAuthStore as useAuth }

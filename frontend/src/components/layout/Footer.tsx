@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div>
-            <h4 className="font-bold text-zinc-800 mb-3">[TÊN SHOP]</h4>
+            <h4 className="font-bold text-zinc-800 mb-3">Phin & Bean</h4>
             <p className="text-sm">
               Thương mại điện tử bán cà phê hạt rang, cà phê phin và dụng cụ pha chế.
             </p>
@@ -37,7 +37,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="pt-4 border-t border-amber-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm">
-          <p>2026 [TÊN SHOP]. Được làm bằng tình yêu ở Việt Nam.</p>
+          <p>2026 Phin & Bean. Được làm bằng tình yêu ở Việt Nam.</p>
           <div>
             {/* Placeholder cho icon social - SVG hoặc icon font */}
             <span className="flex gap-2">

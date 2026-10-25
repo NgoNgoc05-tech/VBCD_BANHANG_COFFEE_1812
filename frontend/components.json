@@ -1,0 +1,70 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/styles/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "componentRegistry": {
+    "ui": {
+      "button": {
+        "dependencies": [
+          "@radix-ui/react-slot",
+          "class-variance-authority",
+          "lucide-react"
+        ],
+        "registryDependencies": []
+      },
+      "input": {
+        "dependencies": [
+          "@radix-ui/react-input"
+        ],
+        "registryDependencies": []
+      },
+      "card": {
+        "dependencies": [
+          "lucide-react"
+        ],
+        "registryDependencies": []
+      },
+      "badge": {
+        "dependencies": [],
+        "registryDependencies": []
+      },
+      "dialog": {
+        "dependencies": [
+          "@radix-ui/react-dialog"
+        ],
+        "registryDependencies": []
+      },
+      "dropdown-menu": {
+        "dependencies": [
+          "@radix-ui/react-dropdown-menu"
+        ],
+        "registryDependencies": []
+      },
+      "sheet": {
+        "dependencies": [
+          "@radix-ui/react-sheet"
+        ],
+        "registryDependencies": []
+      },
+      "skeleton": {
+        "dependencies": [],
+        "registryDependencies": []
+      }
+    }
+  }
+}

@@ -35,7 +35,7 @@ export default function Header() {
           <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
             <span className="text-amber-600 text-xl font-bold">☕</span>
           </div>
-          <span className="text-xl font-bold text-zinc-800">[TÊN SHOP]</span>
+          <span className="text-xl font-bold text-zinc-800">Phin &amp; Bean</span>
         </div>
 
         {/* Navigation links */}

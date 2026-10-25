@@ -20,4 +20,4 @@ def health_check():
 @router.get("/")
 def root():
     """Root endpoint trả về thông tin ngắn gọn về API."""
-    return {"message": "Chào mừng đến với [TÊN SHOP] API"}
+    return {"message": "Chào mừng đến với Phin & Bean API"}
