@@ -24,7 +24,6 @@ export interface Category {
   slug: string;
   image_url: string | null;
   sort_order: number;
-  created_at: string;
 }
 
 export interface Product {
@@ -32,16 +31,39 @@ export interface Product {
   name: string;
   slug: string;
   description: string | null;
-  price_cents: number;
-  sale_price_cents: number | null;
+  price: number;
+  sale_price: number | null;
   stock: number;
+  image_url: string | null;
   images: string[];
   category_id: number;
+  category: Category;
   is_featured: boolean;
   is_active: boolean;
   avg_rating: number;
   created_at: string;
-  updated_at: string;
+}
+
+export interface ProductReview {
+  id: number;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  user: {
+    full_name: string;
+  };
+}
+
+export interface ProductDetail extends Product {
+  reviews: ProductReview[];
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
 }
 
 export interface Review {
@@ -114,12 +136,12 @@ export interface CartItemDetail {
 }
 
 export interface ProductFilter {
-  keyword: string;
-  category_slug: string | null;
+  search: string;
+  category: string | null;
   min_price: number | null;
   max_price: number | null;
   sort: "newest" | "price_asc" | "price_desc" | "rating";
-  featured: boolean;
+  page: number;
 }
 
 export interface OrderFilter {

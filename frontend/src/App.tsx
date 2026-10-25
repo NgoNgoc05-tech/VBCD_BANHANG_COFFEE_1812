@@ -9,6 +9,8 @@ import Login from "./pages/auth/Login"
 import Register from "./pages/auth/Register"
 import Account from "./pages/customer/Account"
 import Home from "./pages/customer/Home"
+import ProductList from "./pages/customer/ProductList"
+import ProductDetail from "./pages/customer/ProductDetail"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,11 +44,13 @@ function AppLayout() {
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register"
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background pb-16 md:pb-0">
       {!isAuthPage && <Header />}
       <div className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

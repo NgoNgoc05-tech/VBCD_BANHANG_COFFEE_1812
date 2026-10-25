@@ -47,7 +47,7 @@ export const useCartStore = create<CartStore>()(
         )
         const currentQuantity = existingItem?.quantity ?? 0
         const quantity = Math.min(currentQuantity + qty, product.stock)
-        const unitPrice = product.sale_price_cents ?? product.price_cents
+        const unitPrice = product.sale_price ?? product.price
         const updatedItem: GuestCartItem = {
           product_id: product.id,
           quantity,

@@ -6,7 +6,7 @@ const Sheet = DialogPrimitive.Root
 const SheetTrigger = DialogPrimitive.Trigger
 const SheetClose = DialogPrimitive.Close
 type SheetContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
-  side?: "left" | "right"
+  side?: "left" | "right" | "bottom"
 }
 
 const SheetContent = React.forwardRef<
@@ -20,7 +20,11 @@ const SheetContent = React.forwardRef<
         ref={ref}
         className={cn(
           "fixed inset-y-0 z-50 w-[min(22rem,85vw)] border bg-background p-6 shadow-xl outline-none",
-          side === "right" ? "right-0 border-l" : "left-0 border-r",
+          side === "bottom"
+            ? "inset-x-0 bottom-0 top-auto max-h-[85dvh] w-full overflow-y-auto rounded-t-2xl border-t"
+            : side === "right"
+              ? "right-0 border-l"
+              : "left-0 border-r",
           className
         )}
         {...props}

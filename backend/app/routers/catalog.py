@@ -4,11 +4,12 @@ import math
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.deps import get_db
 from app.models.category import Category
 from app.models.product import Product
+from app.models.review import Review
 
 router = APIRouter(tags=["Catalog"])
 
@@ -61,6 +62,7 @@ def list_products(
     min_price: int | None = Query(default=None, ge=0),
     max_price: int | None = Query(default=None, ge=0),
     sort: str = Query(default="newest", pattern="^(newest|price_asc|price_desc|rating)$"),
+    featured: bool | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=12, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -82,6 +84,8 @@ def list_products(
                 Category.name.ilike(category.strip()),
             )
         )
+    if featured is not None:
+        query = query.filter(Product.is_featured.is_(featured))
     if min_price is not None:
         query = query.filter(
             func.coalesce(Product.sale_price_cents, Product.price_cents) >= min_price
@@ -128,10 +132,24 @@ def list_products(
 def get_product(slug: str, db: Session = Depends(get_db)) -> dict[str, object]:
     product = (
         db.query(Product)
-        .options(joinedload(Product.category))
+        .options(
+            joinedload(Product.category),
+            selectinload(Product.reviews).joinedload(Review.user),
+        )
         .filter(Product.slug == slug, Product.is_active.is_(True))
         .first()
     )
     if product is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm.")
-    return serialize_product(product)
+    response = serialize_product(product)
+    response["reviews"] = [
+        {
+            "id": review.id,
+            "rating": review.rating,
+            "comment": review.comment,
+            "created_at": review.created_at,
+            "user": {"full_name": review.user.full_name},
+        }
+        for review in sorted(product.reviews, key=lambda item: item.created_at, reverse=True)
+    ]
+    return response
