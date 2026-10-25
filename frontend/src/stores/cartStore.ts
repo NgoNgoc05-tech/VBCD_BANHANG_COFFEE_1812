@@ -1,97 +1,181 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import {
+  addCartItem,
+  clearServerCart,
+  getCart,
+  mergeCart,
+  removeCartItem,
+  updateCartItem,
+  type CartLine,
+} from "../api/cart"
+import { useAuthStore } from "./authStore"
 import type { Product } from "../types"
 
-export interface GuestCartItem {
-  product_id: number
-  quantity: number
-  unit_price_cents: number
-  stock: number
-}
-
 export interface CartStore {
-  cart: GuestCartItem[]
-  totalCents: number
-  setCart: (items: GuestCartItem[]) => void
-  addItem: (product: Product, qty?: number) => void
-  removeItem: (productId: number) => void
-  updateQty: (productId: number, qty: number) => void
-  clearCart: () => void
-  recalculateTotal: () => void
+  items: CartLine[]
+  guestItems: CartLine[]
+  subtotal: number
+  isDrawerOpen: boolean
+  isHydrating: boolean
+  setItems: (items: CartLine[], subtotal?: number) => void
+  addItem: (product: Product, quantity?: number) => Promise<void>
+  removeItem: (productId: number) => Promise<void>
+  updateQty: (productId: number, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
+  clearAfterCheckout: () => void
+  hydrateServerCart: () => Promise<void>
+  mergeGuestCart: () => Promise<void>
+  showGuestCart: () => void
+  setDrawerOpen: (open: boolean) => void
 }
 
-function calculateTotal(cart: GuestCartItem[]): number {
-  return cart.reduce(
-    (total, item) => total + item.unit_price_cents * item.quantity,
+function getProductPrice(product: Product): number {
+  return product.sale_price ?? product.price
+}
+
+function calculateSubtotal(items: CartLine[]): number {
+  return items.reduce(
+    (total, item) => total + getProductPrice(item.product) * item.quantity,
     0
   )
+}
+
+function normalizeServerCart(items: CartLine[]): CartLine[] {
+  return items.map((item) => ({ ...item, id: item.id ?? null }))
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
-      cart: [],
-      totalCents: 0,
+      items: [],
+      guestItems: [],
+      subtotal: 0,
+      isDrawerOpen: false,
+      isHydrating: false,
 
-      setCart: (items) =>
-        set({ cart: items, totalCents: calculateTotal(items) }),
+      setItems: (items, subtotal) => {
+        const normalized = normalizeServerCart(items)
+        set({ items: normalized, subtotal: subtotal ?? calculateSubtotal(normalized) })
+      },
 
-      addItem: (product: Product, qty = 1) => {
-        if (!Number.isInteger(qty) || qty < 1 || product.stock < 1) {
+      addItem: async (product, quantity = 1) => {
+        if (!Number.isInteger(quantity) || quantity < 1) {
+          throw new Error("Số lượng sản phẩm không hợp lệ.")
+        }
+        if (!product.is_active || product.stock < 1) {
+          throw new Error("Sản phẩm hiện đã hết hàng.")
+        }
+
+        if (useAuthStore.getState().token) {
+          const cart = await addCartItem(product.id, quantity)
+          get().setItems(cart.items, cart.subtotal)
+        } else {
+          const current = get().guestItems
+          const existing = current.find((item) => item.product_id === product.id)
+          const nextQuantity = (existing?.quantity ?? 0) + quantity
+          if (nextQuantity > product.stock) {
+            throw new Error(`Chỉ còn ${product.stock} sản phẩm trong kho.`)
+          }
+          const next = existing
+            ? current.map((item) =>
+                item.product_id === product.id
+                  ? { ...item, quantity: nextQuantity, product }
+                  : item
+              )
+            : [...current, { id: null, product_id: product.id, quantity, product }]
+          set({
+            guestItems: next,
+            items: next,
+            subtotal: calculateSubtotal(next),
+          })
+        }
+        set({ isDrawerOpen: true })
+      },
+
+      removeItem: async (productId) => {
+        if (useAuthStore.getState().token) {
+          const cart = await removeCartItem(productId)
+          get().setItems(cart.items, cart.subtotal)
+        } else {
+          const next = get().guestItems.filter((item) => item.product_id !== productId)
+          set({ guestItems: next, items: next, subtotal: calculateSubtotal(next) })
+        }
+      },
+
+      updateQty: async (productId, quantity) => {
+        if (!Number.isInteger(quantity) || quantity < 1) {
+          throw new Error("Số lượng sản phẩm không hợp lệ.")
+        }
+        const currentItem = get().items.find((item) => item.product_id === productId)
+        if (!currentItem) return
+        if (quantity > currentItem.product.stock) {
+          throw new Error(`Chỉ còn ${currentItem.product.stock} sản phẩm trong kho.`)
+        }
+
+        if (useAuthStore.getState().token) {
+          const cart = await updateCartItem(productId, quantity)
+          get().setItems(cart.items, cart.subtotal)
+        } else {
+          const next = get().guestItems.map((item) =>
+            item.product_id === productId ? { ...item, quantity } : item
+          )
+          set({ guestItems: next, items: next, subtotal: calculateSubtotal(next) })
+        }
+      },
+
+      clearCart: async () => {
+        if (useAuthStore.getState().token) {
+          await clearServerCart()
+        }
+        get().clearAfterCheckout()
+      },
+
+      clearAfterCheckout: () =>
+        set({ items: [], guestItems: [], subtotal: 0, isDrawerOpen: false }),
+
+      hydrateServerCart: async () => {
+        if (!useAuthStore.getState().token) {
+          get().showGuestCart()
           return
         }
-
-        const currentCart = get().cart
-        const existingItem = currentCart.find(
-          (item) => item.product_id === product.id
-        )
-        const currentQuantity = existingItem?.quantity ?? 0
-        const quantity = Math.min(currentQuantity + qty, product.stock)
-        const unitPrice = product.sale_price ?? product.price
-        const updatedItem: GuestCartItem = {
-          product_id: product.id,
-          quantity,
-          unit_price_cents: unitPrice,
-          stock: product.stock,
+        set({ isHydrating: true })
+        try {
+          const cart = await getCart()
+          get().setItems(cart.items, cart.subtotal)
+        } finally {
+          set({ isHydrating: false })
         }
-
-        const cart = existingItem
-          ? currentCart.map((item) =>
-              item.product_id === product.id ? updatedItem : item
-            )
-          : [...currentCart, updatedItem]
-        set({ cart, totalCents: calculateTotal(cart) })
       },
 
-      removeItem: (productId: number) => {
-        const cart = get().cart.filter((item) => item.product_id !== productId)
-        set({ cart, totalCents: calculateTotal(cart) })
-      },
-
-      updateQty: (productId: number, qty: number) => {
-        if (!Number.isInteger(qty) || qty <= 0) {
-          get().removeItem(productId)
-          return
+      mergeGuestCart: async () => {
+        const guestItems = get().guestItems
+        if (!useAuthStore.getState().token) {
+          throw new Error("Vui lòng đăng nhập để đồng bộ giỏ hàng.")
         }
-        const cart = get().cart.map((item) =>
-          item.product_id === productId
-            ? { ...item, quantity: Math.min(qty, item.stock) }
-            : item
-        ).filter((item) => item.stock > 0)
-        set({ cart, totalCents: calculateTotal(cart) })
+        const cart =
+          guestItems.length > 0
+            ? await mergeCart(
+                guestItems.map(({ product_id, quantity }) => ({
+                  product_id,
+                  quantity,
+                }))
+              )
+            : await getCart()
+        get().setItems(cart.items, cart.subtotal)
+        set({ guestItems: [] })
       },
 
-      clearCart: () => set({ cart: [], totalCents: 0 }),
+      showGuestCart: () => {
+        const guestItems = get().guestItems
+        set({ items: guestItems, subtotal: calculateSubtotal(guestItems) })
+      },
 
-      recalculateTotal: () =>
-        set({ totalCents: calculateTotal(get().cart) }),
+      setDrawerOpen: (isDrawerOpen) => set({ isDrawerOpen }),
     }),
     {
       name: "phin-bean-cart",
-      partialize: (state) => ({
-        cart: state.cart,
-        totalCents: calculateTotal(state.cart),
-      }),
+      partialize: (state) => ({ guestItems: state.guestItems }),
     }
   )
 )

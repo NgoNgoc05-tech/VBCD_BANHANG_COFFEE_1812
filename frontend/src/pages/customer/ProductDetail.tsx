@@ -2,19 +2,25 @@ import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 import { Check, ChevronRight, Minus, Plus, ShoppingBag, Star, Truck } from "lucide-react"
 import { useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { getProduct, getProducts } from "../../api/catalog"
 import ProductCard, { ProductCardSkeleton } from "../../components/product/ProductCard"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
 import { formatDate, formatPrice } from "../../lib/format"
+import { useCartStore } from "../../stores/cartStore"
+import { getApiErrorMessage } from "../../lib/apiError"
 
 export default function ProductDetail() {
+  const navigate = useNavigate()
   const { slug = "" } = useParams()
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState<"description" | "reviews">("description")
+  const [isAdding, setIsAdding] = useState(false)
+  const addItem = useCartStore((state) => state.addItem)
+  const setDrawerOpen = useCartStore((state) => state.setDrawerOpen)
   const productQuery = useQuery({
     queryKey: ["catalog", "product", slug],
     queryFn: () => getProduct(slug),
@@ -85,6 +91,21 @@ export default function ProductDetail() {
   const reviews = product.reviews ?? []
   const reviewCount = reviews.length
   const relatedProducts = (relatedQuery.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4)
+  const handleAddToCart = async (buyNow = false) => {
+    setIsAdding(true)
+    try {
+      await addItem(product, quantity)
+      toast.success("Đã thêm vào giỏ")
+      if (buyNow) {
+        setDrawerOpen(false)
+        navigate("/checkout")
+      }
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Không thể thêm sản phẩm vào giỏ."))
+    } finally {
+      setIsAdding(false)
+    }
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-8 sm:py-10">
@@ -188,17 +209,19 @@ export default function ProductDetail() {
             </div>
             <Button
               type="button"
-              disabled={product.stock < 1}
-              onClick={() => toast.success("Đã thêm vào giỏ")}
+              disabled={product.stock < 1 || isAdding}
+              onClick={() => void handleAddToCart()}
+              aria-busy={isAdding}
               className="min-w-[160px] flex-1 sm:flex-none"
             >
-              <ShoppingBag aria-hidden="true" /> Thêm vào giỏ
+              <ShoppingBag aria-hidden="true" /> {isAdding ? "Đang thêm..." : "Thêm vào giỏ"}
             </Button>
             <Button
               type="button"
               variant="outline"
-              disabled={product.stock < 1}
-              onClick={() => toast.info("Tính năng mua ngay sẽ có trong giai đoạn giỏ hàng.")}
+              disabled={product.stock < 1 || isAdding}
+              onClick={() => void handleAddToCart(true)}
+              aria-busy={isAdding}
               className="min-w-[120px] flex-1 sm:flex-none"
             >
               Mua ngay

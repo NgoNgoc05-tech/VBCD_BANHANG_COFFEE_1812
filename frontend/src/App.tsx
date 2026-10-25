@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
 import { Toaster } from "sonner"
+import { useEffect } from "react"
 import { AdminRoute, ProtectedRoute } from "./components/auth/ProtectedRoute"
 import ChatWidget from "./components/chat/ChatWidget"
 import Footer from "./components/layout/Footer"
@@ -11,6 +12,13 @@ import Account from "./pages/customer/Account"
 import Home from "./pages/customer/Home"
 import ProductList from "./pages/customer/ProductList"
 import ProductDetail from "./pages/customer/ProductDetail"
+import Cart from "./pages/customer/Cart"
+import Checkout from "./pages/customer/Checkout"
+import OrderSuccess from "./pages/customer/OrderSuccess"
+import CartDrawer from "./components/cart/CartDrawer"
+import { useAuthStore } from "./stores/authStore"
+import { useCartStore } from "./stores/cartStore"
+import { toast } from "sonner"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,15 +50,48 @@ function RoutePlaceholder() {
 function AppLayout() {
   const location = useLocation()
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register"
+  const isCheckout = location.pathname === "/checkout"
+  const token = useAuthStore((state) => state.token)
+  const isCartDrawerOpen = useCartStore((state) => state.isDrawerOpen)
+
+  useEffect(() => {
+    const cartStore = useCartStore.getState()
+    if (token) {
+      void cartStore.hydrateServerCart().catch(() => {
+        toast.error("Không thể tải giỏ hàng từ máy chủ.")
+      })
+    } else {
+      cartStore.showGuestCart()
+    }
+  }, [])
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-16 md:pb-0">
+    <div className={`flex min-h-screen flex-col bg-background ${
+      isCheckout || location.pathname.startsWith("/admin") ? "" : "pb-16 md:pb-0"
+    }`}>
       {!isAuthPage && <Header />}
       <div className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-success/:code"
+            element={
+              <ProtectedRoute>
+                <OrderSuccess />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
@@ -72,9 +113,10 @@ function AppLayout() {
           <Route path="*" element={<RoutePlaceholder />} />
         </Routes>
       </div>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && !isCheckout && <Footer />}
       <Toaster position="top-right" richColors />
-      <ChatWidget />
+      {!isCheckout && !isCartDrawerOpen && <ChatWidget />}
+      <CartDrawer />
     </div>
   )
 }

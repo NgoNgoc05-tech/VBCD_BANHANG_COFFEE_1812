@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img">
+  <rect width="192" height="192" rx="16" fill="#fff"/>
+  <g fill="#1F1A17">
+    <path d="M16 16h48v48H16zm8 8v32h32V24zm8 8h16v16H32zM128 16h48v48h-48zm8 8v32h32V24zm8 8h16v16h-16zM16 128h48v48H16zm8 8v32h32v-32zm8 8h16v16H32z"/>
+    <path d="M80 16h8v8h-8zm16 0h16v8H96zm-8 16h16v8H88zm24 0h8v16h-8zm-32 8h8v16h-8zm16 8h16v8H96zm24 8h8v16h-8zM72 72h16v8H72zm24 0h8v16H96zm16 0h16v8h-16zm24 0h8v16h-8zm24 0h16v8h-16zM80 88h8v16h-8zm16 8h16v8H96zm24 0h8v16h-8zm16 0h16v8h-16zm24 8h16v8h-16zM72 112h16v8H72zm24 0h8v16h-8zm16 8h16v8h-16zm24-8h8v16h-8zm16 8h16v8h-16zM72 136h8v16h-8zm16 0h16v8H88zm24 8h8v16h-8zm16-8h16v8h-16zm24 8h8v16h-8zm16-8h8v24h-8zM80 160h16v8H80zm24 16h16v8h-16z"/>
+  </g>
+  <text x="96" y="188" fill="#6F4E37" font-family="Arial,sans-serif" font-size="8" text-anchor="middle">QR MINH HOA</text>
+</svg>

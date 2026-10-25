@@ -1,8 +1,11 @@
 import { ShoppingBag, Star } from "lucide-react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
+import { useState } from "react"
 import type { Product } from "../../types"
 import { formatPrice } from "../../lib/format"
+import { getApiErrorMessage } from "../../lib/apiError"
+import { useCartStore } from "../../stores/cartStore"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Skeleton } from "../ui/skeleton"
@@ -18,6 +21,20 @@ function discountPercent(product: Product): number {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const discount = discountPercent(product)
+  const addItem = useCartStore((state) => state.addItem)
+  const [isAdding, setIsAdding] = useState(false)
+
+  const addToCart = async () => {
+    setIsAdding(true)
+    try {
+      await addItem(product)
+      toast.success("Đã thêm vào giỏ")
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Không thể thêm sản phẩm vào giỏ."))
+    } finally {
+      setIsAdding(false)
+    }
+  }
 
   return (
     <article className="group min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow duration-200 hover:shadow-soft">
@@ -50,11 +67,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Button
             type="button"
             size="sm"
-            onClick={() => toast.success("Đã thêm vào giỏ")}
+            onClick={() => void addToCart()}
+            disabled={isAdding}
             className="absolute bottom-3 left-3 right-3 translate-y-0 opacity-100 transition duration-200 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
           >
             <ShoppingBag aria-hidden="true" />
-            Thêm vào giỏ
+            {isAdding ? "Đang thêm..." : "Thêm vào giỏ"}
           </Button>
         )}
       </div>

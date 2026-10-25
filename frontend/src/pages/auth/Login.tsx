@@ -12,6 +12,7 @@ import type { AuthResponse } from "../../types"
 import { getApiErrorMessage } from "../../lib/apiError"
 import { getPostAuthPath } from "../../lib/authNavigation"
 import { useAuthStore } from "../../stores/authStore"
+import { useCartStore } from "../../stores/cartStore"
 import { toast } from "sonner"
 
 const loginSchema = z.object({
@@ -41,6 +42,16 @@ export default function Login() {
       const response = await api.post<AuthResponse>("/api/auth/login", values)
       saveLogin(response.data.access_token, response.data.user)
       toast.success("Đăng nhập thành công.")
+      try {
+        await useCartStore.getState().mergeGuestCart()
+      } catch (error: unknown) {
+        toast.error(
+          getApiErrorMessage(
+            error,
+            "Đăng nhập thành công nhưng chưa thể đồng bộ giỏ hàng. Vui lòng thử lại."
+          )
+        )
+      }
       navigate(getPostAuthPath(location.state), { replace: true })
     } catch (error: unknown) {
       const message = getApiErrorMessage(error, "Không thể đăng nhập. Vui lòng thử lại.")

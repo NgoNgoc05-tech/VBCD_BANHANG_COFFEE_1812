@@ -21,11 +21,13 @@ export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
-  const cartCount = useCartStore((state) => state.cart.reduce((total, item) => total + item.quantity, 0))
+  const cartCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0))
+  const clearLocalCart = useCartStore((state) => state.clearAfterCheckout)
   const hideMobileNav = location.pathname.startsWith("/admin") || location.pathname.startsWith("/checkout")
 
   const signOut = () => {
     logout()
+    clearLocalCart()
     toast.success("Bạn đã đăng xuất.")
     navigate("/")
   }

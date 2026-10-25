@@ -1,5 +1,5 @@
 """Order & OrderItem models - lưu đơn hàng và lịch sử giá tại thời điểm mua."""
-from sqlalchemy import String, Integer, DateTime, func, ForeignKey, Text
+from sqlalchemy import String, Integer, DateTime, func, ForeignKey, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.session import Base
 
@@ -12,6 +12,9 @@ class Order(Base):
     code: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     total_amount_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    shipping_fee_cents: Mapped[int] = mapped_column(
+        Integer, default=0, server_default=text("0"), nullable=False
+    )
     # pending | processing | shipping | completed | cancelled
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
     shipping_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -19,8 +22,8 @@ class Order(Base):
     shipping_address: Mapped[str] = mapped_column(String(500), nullable=False)
     # cod | mock_card | mock_vietqr
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
-    # pending | paid | failed
-    payment_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    # unpaid | paid | failed
+    payment_status: Mapped[str] = mapped_column(String(20), default="unpaid", nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
