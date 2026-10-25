@@ -22,7 +22,7 @@ class Order(Base):
     shipping_address: Mapped[str] = mapped_column(String(500), nullable=False)
     # cod | mock_card | mock_vietqr
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
-    # unpaid | paid | failed
+    # unpaid | paid | failed | refunded
     payment_status: Mapped[str] = mapped_column(String(20), default="unpaid", nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())

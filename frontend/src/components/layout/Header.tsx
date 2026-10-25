@@ -100,7 +100,7 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders">
+                  <Link to="/account/orders">
                     <Package aria-hidden="true" />
                     Đơn hàng của tôi
                   </Link>

@@ -1,8 +1,16 @@
 """Idempotently insert the Phin & Bean product catalog."""
 
+from datetime import datetime, timedelta
+
+from sqlalchemy import func
+
+from app.core.security import get_password_hash
+from app.models.order import Order, OrderItem
 from app.db.session import SessionLocal
 from app.models.category import Category
 from app.models.product import Product
+from app.models.review import Review
+from app.models.user import User
 
 CATEGORIES = [
     {
@@ -393,8 +401,124 @@ def seed() -> None:
                 for field, value in product_values.items():
                     setattr(product, field, value)
 
+        db.flush()
+        customers: list[User] = []
+        for index in range(3):
+            email = f"khach{index + 1}@phinbean.example"
+            customer = db.query(User).filter(User.email == email).one_or_none()
+            if customer is None:
+                customer = User(
+                    full_name=f"Khách hàng mẫu {index + 1}",
+                    email=email,
+                    password_hash=get_password_hash("PhinBean@123"),
+                    phone=f"090000000{index + 1}",
+                    address=f"Quận {index + 1}, Thành phố Hồ Chí Minh",
+                    role="customer",
+                )
+                db.add(customer)
+            customers.append(customer)
+
+        db.flush()
+        products_by_slug = {
+            product.slug: product
+            for product in db.query(Product).order_by(Product.id.asc()).all()
+        }
+        products = list(products_by_slug.values())
+        if len(products) < 2:
+            raise RuntimeError("Cần có ít nhất hai sản phẩm trước khi tạo dữ liệu mẫu.")
+
+        statuses = ["completed"] * 15 + ["pending"] * 4 + ["processing"] * 2 + ["shipping"] * 2 + ["cancelled"] * 2
+        review_comments = [
+            "Hương thơm dễ chịu, pha buổi sáng rất hợp. Mình sẽ mua lại.",
+            "Vị cân bằng, đóng gói cẩn thận và giao hàng nhanh.",
+            "Chất lượng đúng như mô tả, hậu vị ngọt và không bị gắt.",
+            "Mình dùng pha phin mỗi ngày, nước cà phê thơm và đậm vừa.",
+            "Sản phẩm ngon, hướng dẫn pha rõ ràng. Rất đáng thử.",
+            "Mùi thơm nổi bật, vị dễ uống; cả nhà đều thích.",
+        ]
+        purchased_pairs: list[tuple[User, Product, datetime]] = []
+        now = datetime.now()
+        for index, status in enumerate(statuses):
+            customer = customers[index % len(customers)]
+            created_at = now - timedelta(days=(index * 7) % 30, hours=index % 9)
+            order_code = f"PBSEED{index + 1:04d}"
+            order = db.query(Order).filter(Order.code == order_code).one_or_none()
+            if order is None:
+                order = Order(code=order_code, user_id=customer.id)
+                db.add(order)
+
+            order_products = [
+                products[(index * 2) % len(products)],
+                products[(index * 2 + 1) % len(products)],
+            ]
+            subtotal = 0
+            for product in order_products:
+                unit_price = product.sale_price_cents or product.price_cents
+                subtotal += unit_price
+                if status == "completed":
+                    purchased_pairs.append((customer, product, created_at))
+
+            shipping_fee = 0 if subtotal >= 500_000 else 30_000
+            payment_method = ("cod", "mock_card", "vietqr")[index % 3]
+            order.user_id = customer.id
+            order.total_amount_cents = subtotal + shipping_fee
+            order.shipping_fee_cents = shipping_fee
+            order.status = status
+            order.shipping_name = customer.full_name
+            order.shipping_phone = customer.phone or "0900000001"
+            order.shipping_address = customer.address or "Thành phố Hồ Chí Minh"
+            order.payment_method = payment_method
+            order.payment_status = (
+                "refunded" if status == "cancelled" and payment_method == "mock_card"
+                else "paid" if status == "completed" or payment_method == "mock_card"
+                else "unpaid"
+            )
+            order.note = "Đơn hàng dữ liệu mẫu"
+            order.created_at = created_at
+            if not order.items:
+                for product in order_products:
+                    unit_price = product.sale_price_cents or product.price_cents
+                    order.items.append(
+                        OrderItem(
+                            product_id=product.id,
+                            product_name=product.name,
+                            unit_price_cents=unit_price,
+                            quantity=1,
+                        )
+                    )
+
+        db.flush()
+        for index, (customer, product, purchased_at) in enumerate(purchased_pairs):
+            review = (
+                db.query(Review)
+                .filter(
+                    Review.product_id == product.id,
+                    Review.user_id == customer.id,
+                )
+                .one_or_none()
+            )
+            if review is None:
+                review = Review(product_id=product.id, user_id=customer.id)
+                db.add(review)
+            review.rating = 4 + (index % 2)
+            review.comment = review_comments[index % len(review_comments)]
+            if review.created_at is None:
+                review.created_at = purchased_at + timedelta(days=1)
+
+        for product in products:
+            average = (
+                db.query(func.avg(Review.rating))
+                .filter(Review.product_id == product.id)
+                .scalar()
+            )
+            product.avg_rating = round(float(average or 0), 2)
+
         db.commit()
-        print(f"Seeded {len(CATEGORIES)} categories and {len(PRODUCTS)} products.")
+        print(
+            f"Seeded {len(CATEGORIES)} categories, {len(PRODUCTS)} products, "
+            f"{len(customers)} customers, {len(statuses)} orders, "
+            f"{len(purchased_pairs)} eligible sample reviews."
+        )
     except Exception:
         db.rollback()
         raise

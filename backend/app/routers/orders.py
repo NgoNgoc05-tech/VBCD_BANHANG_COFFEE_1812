@@ -1,10 +1,11 @@
 """Checkout, payment simulation, and customer order lookup."""
 
+import math
 import secrets
 import time
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import update
 from sqlalchemy.orm import Session, joinedload
 
@@ -44,8 +45,14 @@ def serialize_order(order: Order) -> dict[str, object]:
                 "id": item.id,
                 "product_id": item.product_id,
                 "product_name": item.product_name,
+                "product_slug": item.product.slug if item.product is not None else None,
                 "unit_price_cents": item.unit_price_cents,
                 "quantity": item.quantity,
+                "image_url": (
+                    item.product.images_list[0]
+                    if item.product is not None and item.product.images_list
+                    else None
+                ),
             }
             for item in order.items
         ],
@@ -159,6 +166,74 @@ def create_order(
         raise
 
 
+@router.get("/orders/me")
+def list_my_orders(
+    status: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    query = db.query(Order).filter(Order.user_id == current_user.id)
+    if status:
+        if status not in {"pending", "processing", "shipping", "completed", "cancelled"}:
+            raise HTTPException(status_code=422, detail="Trạng thái đơn hàng không hợp lệ.")
+        query = query.filter(Order.status == status)
+    total = query.count()
+    orders = (
+        query.options(joinedload(Order.items).joinedload(OrderItem.product))
+        .order_by(Order.created_at.desc(), Order.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return {
+        "items": [serialize_order(order) for order in orders],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": math.ceil(total / page_size),
+    }
+
+
+@router.post("/orders/{code}/cancel")
+def cancel_order(
+    code: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    try:
+        order = (
+            db.query(Order)
+            .options(joinedload(Order.items))
+            .filter(Order.code == code, Order.user_id == current_user.id)
+            .with_for_update()
+            .first()
+        )
+        if order is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng.")
+        if order.status not in {"pending", "processing"}:
+            raise HTTPException(
+                status_code=409,
+                detail="Đơn hàng không thể hủy ở trạng thái hiện tại.",
+            )
+        for item in order.items:
+            db.execute(
+                update(Product)
+                .where(Product.id == item.product_id)
+                .values(stock=Product.stock + item.quantity)
+            )
+        order.status = "cancelled"
+        if order.payment_method == "mock_card" and order.payment_status == "paid":
+            order.payment_status = "refunded"
+        db.commit()
+        db.refresh(order)
+        return serialize_order(order)
+    except Exception:
+        db.rollback()
+        raise
+
+
 @router.get("/orders/{code}")
 def get_order(
     code: str,
@@ -167,7 +242,7 @@ def get_order(
 ) -> dict[str, object]:
     order = (
         db.query(Order)
-        .options(joinedload(Order.items))
+        .options(joinedload(Order.items).joinedload(OrderItem.product))
         .filter(Order.code == code)
         .first()
     )

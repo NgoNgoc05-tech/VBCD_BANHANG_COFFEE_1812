@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle, LockKeyhole, UserRound } from "lucide-react"
+import { LoaderCircle, LockKeyhole, Package, UserRound } from "lucide-react"
 import { useEffect } from "react"
+import { Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import api from "../../api/client"
@@ -115,10 +116,13 @@ export default function Account() {
 
   return (
     <main className="mx-auto min-h-[60vh] max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Tài khoản</p>
-        <h1 className="mt-2 text-3xl font-semibold text-foreground">Thông tin của bạn</h1>
-        <p className="mt-2 text-muted-foreground">Quản lý hồ sơ và bảo mật tài khoản Phin &amp; Bean.</p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Tài khoản</p>
+          <h1 className="mt-2 text-3xl font-semibold text-foreground">Thông tin của bạn</h1>
+          <p className="mt-2 text-muted-foreground">Quản lý hồ sơ và bảo mật tài khoản Phin &amp; Bean.</p>
+        </div>
+        <Button asChild variant="outline"><Link to="/account/orders"><Package aria-hidden="true" /> Đơn hàng của tôi</Link></Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

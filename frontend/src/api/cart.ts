@@ -40,21 +40,45 @@ export interface OrderResponse {
   user_id: number
   total_amount_cents: number
   shipping_fee_cents: number
-  status: string
+  status: "pending" | "processing" | "shipping" | "completed" | "cancelled"
   shipping_name: string
   shipping_phone: string
   shipping_address: string
   payment_method: "cod" | "mock_card" | "vietqr"
-  payment_status: "unpaid" | "paid" | "failed"
+  payment_status: "unpaid" | "paid" | "failed" | "refunded"
   note: string | null
   created_at: string
   items: Array<{
     id: number
     product_id: number
     product_name: string
+    product_slug: string | null
     unit_price_cents: number
     quantity: number
+    image_url: string | null
   }>
+}
+
+export interface OrderListResponse {
+  items: OrderResponse[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
+export async function getMyOrders(
+  params: { status?: string; page?: number; page_size?: number } = {}
+): Promise<OrderListResponse> {
+  const response = await api.get<OrderListResponse>("/api/orders/me", { params })
+  return response.data
+}
+
+export async function cancelOrder(code: string): Promise<OrderResponse> {
+  const response = await api.post<OrderResponse>(
+    `/api/orders/${encodeURIComponent(code)}/cancel`
+  )
+  return response.data
 }
 
 export async function getCart(): Promise<CartResponse> {

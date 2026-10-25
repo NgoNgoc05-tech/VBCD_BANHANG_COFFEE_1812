@@ -1,16 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
 import { Check, ChevronRight, Minus, Plus, ShoppingBag, Star, Truck } from "lucide-react"
 import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { getProduct, getProducts } from "../../api/catalog"
+import { canReviewProduct, getProductReviews } from "../../api/reviews"
 import ProductCard, { ProductCardSkeleton } from "../../components/product/ProductCard"
+import ReviewDialog from "../../components/reviews/ReviewDialog"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
 import { formatDate, formatPrice } from "../../lib/format"
 import { useCartStore } from "../../stores/cartStore"
 import { getApiErrorMessage } from "../../lib/apiError"
+import { useAuthStore } from "../../stores/authStore"
 
 export default function ProductDetail() {
   const navigate = useNavigate()
@@ -18,7 +21,10 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState<"description" | "reviews">("description")
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
+  const queryClient = useQueryClient()
+  const token = useAuthStore((state) => state.token)
   const addItem = useCartStore((state) => state.addItem)
   const setDrawerOpen = useCartStore((state) => state.setDrawerOpen)
   const productQuery = useQuery({
@@ -26,6 +32,19 @@ export default function ProductDetail() {
     queryFn: () => getProduct(slug),
     enabled: Boolean(slug),
     staleTime: 5 * 60_000,
+  })
+  const reviewsQuery = useInfiniteQuery({
+    queryKey: ["product-reviews", slug],
+    queryFn: ({ pageParam }) => getProductReviews(slug, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+    enabled: Boolean(slug),
+  })
+  const canReviewQuery = useQuery({
+    queryKey: ["can-review", slug, Boolean(token)],
+    queryFn: () => canReviewProduct(slug),
+    enabled: Boolean(slug && token),
   })
   const product = productQuery.data
   const relatedQuery = useQuery({
@@ -88,8 +107,11 @@ export default function ProductDetail() {
   }
 
   const discounted = product.sale_price !== null && product.sale_price < product.price
-  const reviews = product.reviews ?? []
-  const reviewCount = reviews.length
+  const reviewPages = reviewsQuery.data?.pages ?? []
+  const reviews = reviewPages.flatMap((page) => page.items)
+  const reviewSummary = reviewPages[0]
+  const reviewCount = reviewSummary?.total ?? product.reviews.length
+  const averageRating = reviewSummary?.average_rating ?? product.avg_rating
   const relatedProducts = (relatedQuery.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4)
   const handleAddToCart = async (buyNow = false) => {
     setIsAdding(true)
@@ -162,12 +184,12 @@ export default function ProductDetail() {
           </Link>
           <h1 className="mt-2 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">{product.name}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1 text-amber-600" aria-label={`Đánh giá ${product.avg_rating} trên 5`}>
+            <div className="flex items-center gap-1 text-amber-600" aria-label={`Đánh giá ${averageRating} trên 5`}>
               {Array.from({ length: 5 }, (_, index) => (
-                <Star key={index} aria-hidden="true" className={`h-4 w-4 ${index < Math.round(product.avg_rating) ? "fill-current" : ""}`} />
+                <Star key={index} aria-hidden="true" className={`h-4 w-4 ${index < Math.round(averageRating) ? "fill-current" : ""}`} />
               ))}
             </div>
-            <span className="text-sm font-medium">{product.avg_rating.toFixed(1)}</span>
+            <span className="text-sm font-medium">{averageRating.toFixed(1)}</span>
             <button type="button" onClick={() => setActiveTab("reviews")} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
               ({reviewCount} đánh giá)
             </button>
@@ -242,30 +264,98 @@ export default function ProductDetail() {
             {activeTab === "description" ? (
               <p className="whitespace-pre-line text-foreground/80">{product.description || "Thông tin sản phẩm đang được cập nhật."}</p>
             ) : (
-              reviews.length > 0 ? (
-                <ul className="space-y-4">
-                  {reviews.map((review) => (
-                    <li key={review.id} className="rounded-xl border border-border bg-card p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground">{review.user.full_name}</p>
-                        <time dateTime={review.created_at} className="text-xs text-muted-foreground">{formatDate(review.created_at)}</time>
+              <div className="space-y-6">
+                <section className="grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[180px_1fr] sm:p-6">
+                  <div className="flex flex-col items-center justify-center border-b border-border pb-4 text-center sm:border-b-0 sm:border-r sm:pb-0 sm:pr-5">
+                    <span className="text-4xl font-bold text-foreground">{averageRating.toFixed(1)}</span>
+                    <div className="mt-2 flex items-center gap-1 text-amber-500" aria-label={`${averageRating} trên 5 sao`}>
+                      {Array.from({ length: 5 }, (_, index) => <Star key={index} aria-hidden="true" className={`h-4 w-4 ${index < Math.round(averageRating) ? "fill-current" : ""}`} />)}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{reviewCount} đánh giá</p>
+                  </div>
+                  <div className="space-y-2">
+                    {[5, 4, 3, 2, 1].map((rating) => {
+                      const count = reviewSummary?.rating_counts[String(rating)] ?? 0
+                      const percentage = reviewCount ? (count / reviewCount) * 100 : 0
+                      return (
+                        <div key={rating} className="flex items-center gap-2 text-xs">
+                          <span className="w-7 shrink-0 text-muted-foreground">{rating} sao</span>
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                            <div className="h-full rounded-full bg-amber-400" style={{ width: `${percentage}%` }} />
+                          </div>
+                          <span className="w-6 text-right text-muted-foreground">{count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+
+                {token && canReviewQuery.data && (
+                  <Button type="button" onClick={() => setReviewDialogOpen(true)}>Viết đánh giá</Button>
+                )}
+                {(!token || (canReviewQuery.isSuccess && !canReviewQuery.data)) && (
+                  <p className="rounded-xl bg-secondary/60 p-4 text-sm text-muted-foreground">Bạn cần mua và nhận hàng để đánh giá</p>
+                )}
+
+                {reviewsQuery.isPending ? (
+                  <div className="space-y-3" aria-label="Đang tải đánh giá">
+                    {Array.from({ length: 3 }, (_, index) => <div key={index} className="h-28 animate-pulse rounded-xl bg-muted" />)}
+                  </div>
+                ) : reviewsQuery.isError ? (
+                  <div className="rounded-xl border border-border p-5 text-center">
+                    <p className="text-foreground">Chưa thể tải đánh giá.</p>
+                    <Button type="button" variant="outline" className="mt-3" onClick={() => void reviewsQuery.refetch()}>Thử lại</Button>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <>
+                    <ul className="space-y-3">
+                      {reviews.map((review) => (
+                        <li key={review.id} className="rounded-xl border border-border bg-card p-4">
+                          <div className="flex items-start gap-3">
+                            <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-primary">
+                              {review.user.full_name.trim().charAt(0).toLocaleUpperCase("vi-VN")}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="font-semibold text-foreground">{review.user.full_name}</p>
+                                <time dateTime={review.created_at} className="text-xs text-muted-foreground">{formatDate(review.created_at)}</time>
+                              </div>
+                              <div className="mt-1 flex items-center gap-1 text-amber-500" aria-label={`${review.rating} trên 5 sao`}>
+                                {Array.from({ length: 5 }, (_, index) => <Star key={index} aria-hidden="true" className={`h-4 w-4 ${index < review.rating ? "fill-current" : ""}`} />)}
+                              </div>
+                              {review.comment && <p className="mt-2 whitespace-pre-line text-foreground/80">{review.comment}</p>}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {reviewsQuery.hasNextPage && (
+                      <div className="text-center">
+                        <Button type="button" variant="outline" disabled={reviewsQuery.isFetchingNextPage} onClick={() => void reviewsQuery.fetchNextPage()}>
+                          {reviewsQuery.isFetchingNextPage ? "Đang tải..." : "Xem thêm đánh giá"}
+                        </Button>
                       </div>
-                      <div className="mt-2 flex items-center gap-1 text-amber-600" aria-label={`${review.rating} trên 5 sao`}>
-                        {Array.from({ length: 5 }, (_, index) => (
-                          <Star key={index} aria-hidden="true" className={`h-4 w-4 ${index < review.rating ? "fill-current" : ""}`} />
-                        ))}
-                      </div>
-                      {review.comment && <p className="mt-3 whitespace-pre-line text-foreground/80">{review.comment}</p>}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="rounded-xl bg-secondary/50 p-5 text-center">
-                  <Star aria-hidden="true" className="mx-auto h-6 w-6 text-accent" />
-                  <p className="mt-2 font-medium text-foreground">Chưa có đánh giá</p>
-                  <p className="mt-1">Hãy quay lại sau để xem nhận xét từ khách hàng.</p>
-                </div>
-              )
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-xl bg-secondary/50 p-5 text-center">
+                    <Star aria-hidden="true" className="mx-auto h-6 w-6 text-accent" />
+                    <p className="mt-2 font-medium text-foreground">Chưa có đánh giá</p>
+                    <p className="mt-1">Hãy quay lại sau để xem nhận xét từ khách hàng.</p>
+                  </div>
+                )}
+                <ReviewDialog
+                  open={reviewDialogOpen}
+                  onOpenChange={setReviewDialogOpen}
+                  productSlug={product.slug}
+                  productName={product.name}
+                  onSaved={() => {
+                    void queryClient.invalidateQueries({ queryKey: ["product-reviews", product.slug] })
+                    void queryClient.invalidateQueries({ queryKey: ["can-review", product.slug] })
+                    void queryClient.invalidateQueries({ queryKey: ["catalog", "product", product.slug] })
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>

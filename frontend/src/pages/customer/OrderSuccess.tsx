@@ -97,7 +97,7 @@ export default function OrderSuccess() {
           )}
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button asChild variant="outline" className="flex-1"><Link to="/orders">Xem đơn hàng</Link></Button>
+            <Button asChild variant="outline" className="flex-1"><Link to={`/account/orders/${encodeURIComponent(order.code)}`}>Xem đơn hàng</Link></Button>
             <Button asChild className="flex-1"><Link to="/products"><ShoppingBag aria-hidden="true" /> Tiếp tục mua sắm</Link></Button>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">Tạm tính hàng hóa: {formatPrice(subtotal)}</p>

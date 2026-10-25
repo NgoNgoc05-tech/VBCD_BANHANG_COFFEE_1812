@@ -15,6 +15,8 @@ import ProductDetail from "./pages/customer/ProductDetail"
 import Cart from "./pages/customer/Cart"
 import Checkout from "./pages/customer/Checkout"
 import OrderSuccess from "./pages/customer/OrderSuccess"
+import Orders from "./pages/customer/Orders"
+import OrderDetail from "./pages/customer/OrderDetail"
 import CartDrawer from "./components/cart/CartDrawer"
 import { useAuthStore } from "./stores/authStore"
 import { useCartStore } from "./stores/cartStore"
@@ -99,6 +101,22 @@ function AppLayout() {
             element={
               <ProtectedRoute>
                 <Account />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/orders/:code"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
               </ProtectedRoute>
             }
           />

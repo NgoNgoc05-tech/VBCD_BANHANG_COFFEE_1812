@@ -86,6 +86,19 @@ class OrderCreateRequest(BaseModel):
         return self
 
 
+class ReviewCreateRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("comment")
+    @classmethod
+    def validate_comment(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Vui lòng nhập nội dung đánh giá.")
+        return normalized
+
+
 class OrderItemResponse(BaseModel):
     id: int
     product_id: int

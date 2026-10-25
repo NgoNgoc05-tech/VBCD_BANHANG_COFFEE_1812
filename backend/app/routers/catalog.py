@@ -6,12 +6,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.core.deps import get_db
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from app.core.deps import get_current_user, get_db
+from app.core.security import decode_access_token
 from app.models.category import Category
+from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.review import Review
+from app.models.user import User
+from app.schemas.commerce import ReviewCreateRequest
 
 router = APIRouter(tags=["Catalog"])
+optional_bearer = HTTPBearer(auto_error=False)
 
 
 def serialize_category(category: Category) -> dict[str, object]:
@@ -153,3 +160,145 @@ def get_product(slug: str, db: Session = Depends(get_db)) -> dict[str, object]:
         for review in sorted(product.reviews, key=lambda item: item.created_at, reverse=True)
     ]
     return response
+
+
+def _eligible_to_review(db: Session, user_id: int, product_id: int) -> bool:
+    return (
+        db.query(OrderItem.id)
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(
+            Order.user_id == user_id,
+            Order.status == "completed",
+            OrderItem.product_id == product_id,
+        )
+        .first()
+        is not None
+    )
+
+
+@router.get("/api/products/{slug}/reviews")
+def list_product_reviews(
+    slug: str,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=5, ge=1, le=50),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    product = db.query(Product).filter(Product.slug == slug, Product.is_active.is_(True)).first()
+    if product is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm.")
+
+    query = db.query(Review).filter(Review.product_id == product.id)
+    total = query.count()
+    reviews = (
+        query.options(joinedload(Review.user))
+        .order_by(Review.created_at.desc(), Review.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    grouped_counts = (
+        db.query(Review.rating, func.count(Review.id))
+        .filter(Review.product_id == product.id)
+        .group_by(Review.rating)
+        .all()
+    )
+    rating_counts = {str(rating): count for rating, count in grouped_counts}
+    for rating in range(1, 6):
+        rating_counts.setdefault(str(rating), 0)
+
+    return {
+        "items": [
+            {
+                "id": review.id,
+                "product_id": review.product_id,
+                "user_id": review.user_id,
+                "rating": review.rating,
+                "comment": review.comment,
+                "created_at": review.created_at,
+                "user": {"full_name": review.user.full_name},
+            }
+            for review in reviews
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": math.ceil(total / page_size),
+        "average_rating": float(product.avg_rating),
+        "rating_counts": rating_counts,
+    }
+
+
+@router.get("/api/products/{slug}/can-review")
+def can_review_product(
+    slug: str,
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    db: Session = Depends(get_db),
+) -> dict[str, bool]:
+    product = db.query(Product).filter(Product.slug == slug, Product.is_active.is_(True)).first()
+    if product is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm.")
+    if credentials is None:
+        return {"can_review": False}
+
+    payload = decode_access_token(credentials.credentials)
+    user = db.query(User).filter(User.id == payload.sub).first() if payload else None
+    return {
+        "can_review": bool(user and _eligible_to_review(db, user.id, product.id))
+    }
+
+
+@router.post("/api/products/{slug}/reviews")
+def upsert_product_review(
+    slug: str,
+    data: ReviewCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    product = db.query(Product).filter(Product.slug == slug, Product.is_active.is_(True)).first()
+    if product is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm.")
+    if not _eligible_to_review(db, current_user.id, product.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Bạn cần mua và nhận sản phẩm để gửi đánh giá.",
+        )
+
+    try:
+        review = (
+            db.query(Review)
+            .filter(Review.product_id == product.id, Review.user_id == current_user.id)
+            .first()
+        )
+        if review is None:
+            review = Review(
+                product_id=product.id,
+                user_id=current_user.id,
+                rating=data.rating,
+                comment=data.comment,
+            )
+            db.add(review)
+        else:
+            review.rating = data.rating
+            review.comment = data.comment
+
+        db.flush()
+        average = (
+            db.query(func.avg(Review.rating))
+            .filter(Review.product_id == product.id)
+            .scalar()
+        )
+        product.avg_rating = round(float(average or 0), 2)
+        db.commit()
+        db.refresh(review)
+        return {
+            "id": review.id,
+            "product_id": review.product_id,
+            "user_id": review.user_id,
+            "rating": review.rating,
+            "comment": review.comment,
+            "created_at": review.created_at,
+            "user": {"full_name": current_user.full_name},
+        }
+    except Exception:
+        db.rollback()
+        raise
