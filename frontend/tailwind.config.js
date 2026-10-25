@@ -10,6 +10,39 @@ export default {
         sans: ['"Be Vietnam Pro"', 'Noto Sans SVN', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
+        background: "#FAF7F2",
+        foreground: "#1F1A17",
+        primary: {
+          DEFAULT: "#6F4E37",
+          foreground: "#FFFFFF",
+        },
+        secondary: {
+          DEFAULT: "#F5E9DD",
+          foreground: "#6F4E37",
+        },
+        muted: {
+          DEFAULT: "#F5E9DD",
+          foreground: "#8C7B6B",
+        },
+        card: {
+          DEFAULT: "#FFFFFF",
+          foreground: "#1F1A17",
+        },
+        popover: {
+          DEFAULT: "#FFFFFF",
+          foreground: "#1F1A17",
+        },
+        border: "#E8E1D9",
+        input: "#E8E1D9",
+        ring: "#6F4E37",
+        accent: {
+          DEFAULT: "#D4A373",
+          foreground: "#1F1A17",
+        },
+        destructive: {
+          DEFAULT: "#E74C3C",
+          foreground: "#FFFFFF",
+        },
         brand: {
           primary: "#6F4E37",
           accent: "#D4A373",
@@ -18,8 +51,10 @@ export default {
           border: "#E8E1D9",
         },
         success: "#2D6A4F",
+        "success-foreground": "#FFFFFF",
         error: "#E74C3C",
         warning: "#F4A261",
+        "warning-foreground": "#1F1A17",
       },
       borderRadius: {
         lg: "var(--radius)",

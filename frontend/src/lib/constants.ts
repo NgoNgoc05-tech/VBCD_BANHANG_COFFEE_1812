@@ -32,13 +32,13 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
 export const PAYMENT_METHODS = {
   COD: "cod",
   MOCK_CARD: "mock_card",
-  MOCK_VIETQR: "mock_vietqr",
+  VIETQR: "vietqr",
 } as const
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: "COD",
   mock_card: "Thẻ giả lập",
-  mock_vietqr: "VietQR giả lập",
+  vietqr: "VietQR giả lập",
 }
 
 // --- User role ---
@@ -52,7 +52,7 @@ export const CHATBOT_RATE_LIMIT = 10 // request/phút/IP
 export const CHATBOT_RATE_LIMIT_WINDOW_SECONDS = 60
 
 // --- Shipping fee ---
-export const FREE_SHIPPING_THRESHOLD_CENTS = 300000 // Miễn phí vận chuyển trên 300.000đ
+export const FREE_SHIPPING_THRESHOLD_CENTS = 500000 // Miễn phí vận chuyển từ 500.000đ
 export const SHIPPING_FEE_CENTS = 30000 // Phí ship cố định 30.000đ
 
 // --- Order ---

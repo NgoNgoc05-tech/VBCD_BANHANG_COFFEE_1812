@@ -1,13 +1,9 @@
 import * as React from "react"
-import * as InputPrimitive from "@radix-ui/react-input"
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<
-  React.ElementRef<typeof InputPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof InputPrimitive.Root>
->(({ className, type, ...props }, ref) => {
-  return (
-    <InputPrimitive.Root
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => (
+    <input
       type={type}
       ref={ref}
       className={cn(
@@ -17,7 +13,7 @@ const Input = React.forwardRef<
       {...props}
     />
   )
-})
-Input.displayName = InputPrimitive.Root.displayName
+)
+Input.displayName = "Input"
 
 export { Input }

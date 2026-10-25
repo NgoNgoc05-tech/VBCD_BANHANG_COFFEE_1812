@@ -1,14 +1,18 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { CartItem, Product } from "../types"
+import type { Product } from "../types"
+
+export interface GuestCartItem {
+  product_id: number
+  quantity: number
+  unit_price_cents: number
+  stock: number
+}
 
 export interface CartStore {
-  // State
-  cart: CartItem[]
+  cart: GuestCartItem[]
   totalCents: number
-
-  // Actions
-  setCart: (items: CartItem[]) => void
+  setCart: (items: GuestCartItem[]) => void
   addItem: (product: Product, qty?: number) => void
   removeItem: (productId: number) => void
   updateQty: (productId: number, qty: number) => void
@@ -16,102 +20,80 @@ export interface CartStore {
   recalculateTotal: () => void
 }
 
-// Helper: kiểm tra xem product đã hết trong kho chưa
-function canAddToCart(cart: CartItem[], product: Product, qty: number): boolean {
-  const currentQty = cart
-    .filter((item) => item.product_id === product.id)
-    .reduce((sum, item) => sum + item.quantity, 0)
-  return currentQty + qty <= product.stock
+function calculateTotal(cart: GuestCartItem[]): number {
+  return cart.reduce(
+    (total, item) => total + item.unit_price_cents * item.quantity,
+    0
+  )
 }
 
-// Helper: tính tổng
-function calculateTotal(cart: CartItem[], products: Map<number, Product>): number {
-  let total = 0
-  for (const item of cart) {
-    const product = products.get(item.product_id)
-    if (product) {
-      total += product.sale_price_cents ?? product.price_cents
-    }
-  }
-  return total
-}
-
-// Tạo store Zustand (persist localStorage)
-export const useCart = create<CartStore>()(
+export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       cart: [],
       totalCents: 0,
 
-      setCart: (items: CartItem[]) =>
-        set({
-          cart: items,
-          totalCents: calculateTotal(items, new Map()), // sẽ recalculate sau khi load products,
-        }),
+      setCart: (items) =>
+        set({ cart: items, totalCents: calculateTotal(items) }),
 
       addItem: (product: Product, qty = 1) => {
-        if (!canAddToCart(get().cart, product, qty)) {
-          // Nếu vượt kho, chỉ thêm số lượng còn trống
-          // Tốt hơn làToast lỗi - để implement riêng
+        if (!Number.isInteger(qty) || qty < 1 || product.stock < 1) {
+          return
         }
 
-        const existingIndex = get().cart.findIndex(
+        const currentCart = get().cart
+        const existingItem = currentCart.find(
           (item) => item.product_id === product.id
         )
-
-        if (existingIndex >= 0) {
-          // Cập nhật quantity
-          const newQty = Math.min(
-            get().cart[existingIndex].quantity + qty,
-            product.stock
-          )
-          const newCart = [...get().cart]
-          newCart[existingIndex] = {
-            ...get().cart[existingIndex],
-            quantity: newQty,
-          }
-          set({ cart: newCart })
-        } else {
-          set({ cart: [...get().cart, { product_id: product.id, quantity: qty }] })
+        const currentQuantity = existingItem?.quantity ?? 0
+        const quantity = Math.min(currentQuantity + qty, product.stock)
+        const unitPrice = product.sale_price_cents ?? product.price_cents
+        const updatedItem: GuestCartItem = {
+          product_id: product.id,
+          quantity,
+          unit_price_cents: unitPrice,
+          stock: product.stock,
         }
 
-        get().recalculateTotal()
+        const cart = existingItem
+          ? currentCart.map((item) =>
+              item.product_id === product.id ? updatedItem : item
+            )
+          : [...currentCart, updatedItem]
+        set({ cart, totalCents: calculateTotal(cart) })
       },
 
       removeItem: (productId: number) => {
-        set({
-          cart: get().cart.filter((item) => item.product_id !== productId),
-        })
-        get().recalculateTotal()
+        const cart = get().cart.filter((item) => item.product_id !== productId)
+        set({ cart, totalCents: calculateTotal(cart) })
       },
 
       updateQty: (productId: number, qty: number) => {
-        if (qty <= 0) {
+        if (!Number.isInteger(qty) || qty <= 0) {
           get().removeItem(productId)
           return
         }
-        const product = /* fetch product detail */ null
-        const newCart = get().cart.map((item) =>
-          item.product_id === productId ? { ...item, quantity: qty } : item
-        )
-        set({ cart: newCart })
-        get().recalculateTotal()
+        const cart = get().cart.map((item) =>
+          item.product_id === productId
+            ? { ...item, quantity: Math.min(qty, item.stock) }
+            : item
+        ).filter((item) => item.stock > 0)
+        set({ cart, totalCents: calculateTotal(cart) })
       },
 
       clearCart: () => set({ cart: [], totalCents: 0 }),
 
-      recalculateTotal: () => {
-        // Nơi này sẽ sản phẩm được load từ API, ví dụ qua Map<number, Product>
-        // Mình sẽ keep totalCents = 0 nếu chưa có product list.
-        // Ở component sẽ truyền products vào hoặc gọi service.
-        // Ở đây chỉ set tổng giả định.
-        set({ totalCents: 0 })
-      },
+      recalculateTotal: () =>
+        set({ totalCents: calculateTotal(get().cart) }),
     }),
     {
       name: "phin-bean-cart",
-      // Chỉ persist cart items, không persist totalCents (tính toán mới)
-      // storage: createJSONStorage({ getItem: () => sessionStorage.getItem("phin-bean-cart") }),
+      partialize: (state) => ({
+        cart: state.cart,
+        totalCents: calculateTotal(state.cart),
+      }),
     }
   )
 )
+
+export const useCart = useCartStore

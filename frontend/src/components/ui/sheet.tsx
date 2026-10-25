@@ -1,27 +1,33 @@
 import * as React from "react"
-import * as SheetPrimitive from "@radix-ui/react-sheet"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { cn } from "@/lib/utils"
 
-const Sheet = SheetPrimitive.Root
-const SheetTrigger = SheetPrimitive.Trigger
+const Sheet = DialogPrimitive.Root
+const SheetTrigger = DialogPrimitive.Trigger
+const SheetClose = DialogPrimitive.Close
+type SheetContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  side?: "left" | "right"
+}
+
 const SheetContent = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  SheetContentProps
 >(({ className, side = "right", ...props }, ref) => {
   return (
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(
-        "p-6 rounded-lg bg-background shadow-md transition-all duration-300 sm:max-w-sm",
-        side === "right"
-          ? "right-0 top-1/2 -translate-y-1/2 sm:right-auto sm:translate-x-28"
-          : "left-0 top-1/2 -translate-y-1/2 sm:left-auto sm:-translate-x-28",
-        className
-      )}
-      {...props}
-    />
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-y-0 z-50 w-[min(22rem,85vw)] border bg-background p-6 shadow-xl outline-none",
+          side === "right" ? "right-0 border-l" : "left-0 border-r",
+          className
+        )}
+        {...props}
+      />
+    </DialogPrimitive.Portal>
   )
 })
-SheetContent.displayName = SheetPrimitive.Content.displayName
+SheetContent.displayName = "SheetContent"
 
-export { Sheet, SheetContent, SheetTrigger }
+export { Sheet, SheetClose, SheetContent, SheetTrigger }

@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils"
 const DropdownMenu = DropdownMenuPrimitive.Root
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 const DropdownMenuContent = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>
+  React.ElementRef<typeof DropdownMenuPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, ...props }, ref) => {
   return (
     <DropdownMenuPrimitive.Content
       ref={ref}
       className={cn(
-        "rounded-md border bg-popover p-1 text-sm shadow-md z-50[&>[&>*:not(script)]:first-child]:pb-0[&>[&>*:not(script)]:last-child]:pa-0",
+        "z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-sm text-popover-foreground shadow-md",
         className
       )}
       {...props}

@@ -1,50 +1,39 @@
-import { cn } from "../lib/utils"
+import { Coffee } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export default function Footer() {
   return (
-    <footer className="bg-amber-50 text-zinc-600 border-t border-amber-200 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div>
-            <h4 className="font-bold text-zinc-800 mb-3">Phin & Bean</h4>
-            <p className="text-sm">
-              Thương mại điện tử bán cà phê hạt rang, cà phê phin và dụng cụ pha chế.
-            </p>
-          </div>
-          <div>
-            <h5 className="font-semibold text-zinc-800 mb-3">Hỗ trợ</h5>
-            <ul className="text-sm space-y-1">
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Hỗ trợ khách hàng</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Câu hỏi thường gặp</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Chính sách bảo mật</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-semibold text-zinc-800 mb-3">Công thức</h5>
-            <ul className="text-sm space-y-1">
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Về chúng tôi</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Chính sách vận chuyển</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Điều kiện trả hàng</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-semibold text-zinc-800 mb-3">Thanh toán</h5>
-            <ul className="text-sm space-y-1">
-              <li><a href="#" className="hover:text-amber-600 transition-colors">COD</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">Thẻ Visa/Master</a></li>
-              <li><a href="#" className="hover:text-amber-600 transition-colors">VietQR</a></li>
-            </ul>
-          </div>
+    <footer className="border-t border-border bg-[#F3EDE5]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr]">
+        <div>
+          <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-foreground">
+            <Coffee aria-hidden="true" className="h-5 w-5 text-primary" />
+            Phin &amp; Bean
+          </Link>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
+            Cà phê Việt, chuẩn vị mỗi sáng. Gửi đến bạn những hạt cà phê được
+            chọn lựa bằng sự trân trọng dành cho hương vị nguyên bản.
+          </p>
         </div>
-        <div className="pt-4 border-t border-amber-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm">
-          <p>2026 Phin & Bean. Được làm bằng tình yêu ở Việt Nam.</p>
-          <div>
-            {/* Placeholder cho icon social - SVG hoặc icon font */}
-            <span className="flex gap-2">
-              {/* <a href="#" aria-label="Facebook" className="hover:text-blue-500">...</a> */}
-            </span>
-          </div>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Khám phá</h2>
+          <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+            <li><Link className="transition-colors hover:text-primary" to="/">Trang chủ</Link></li>
+            <li><Link className="transition-colors hover:text-primary" to="/products">Sản phẩm</Link></li>
+            <li><Link className="transition-colors hover:text-primary" to="/about">Về chúng tôi</Link></li>
+          </ul>
         </div>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Liên hệ</h2>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Chúng tôi luôn sẵn lòng giúp bạn tìm được tách cà phê yêu thích.
+          </p>
+        </div>
+      </div>
+      <div className="border-t border-border/80">
+        <p className="mx-auto max-w-7xl px-5 py-4 text-xs text-muted-foreground sm:px-8">
+          © {new Date().getFullYear()} Phin &amp; Bean. Cà phê Việt, chuẩn vị mỗi sáng.
+        </p>
       </div>
     </footer>
   )
