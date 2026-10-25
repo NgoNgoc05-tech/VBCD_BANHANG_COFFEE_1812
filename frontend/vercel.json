@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://BACKEND_URL/api/$1"
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": "https://BACKEND_URL/static/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

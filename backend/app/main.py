@@ -12,7 +12,7 @@ app = FastAPI(title=settings.APP_NAME, version="1.0.0", docs_url="/docs")
 # CORS: chỉ cho phép origin của frontend (liệt kê trong .env)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,6 +20,7 @@ app.add_middleware(
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
+(static_dir / "uploads").mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Router health check (public)

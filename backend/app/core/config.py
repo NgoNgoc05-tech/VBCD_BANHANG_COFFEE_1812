@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # --- CORS (chỉ cho phép origin của frontend) ---
     CORS_ORIGINS: List[str] = ["http://localhost:5173"]
+    FRONTEND_ORIGINS: str = ""
 
     # --- JWT ---
     SECRET_KEY: str = "change-me-in-production"
@@ -41,6 +42,15 @@ class Settings(BaseSettings):
     @property
     def UPLOAD_DIR(self) -> str:
         return os.path.join(self.STATIC_DIR, "uploads")
+
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        additional_origins = [
+            origin.strip()
+            for origin in self.FRONTEND_ORIGINS.split(",")
+            if origin.strip()
+        ]
+        return list(dict.fromkeys([*self.CORS_ORIGINS, *additional_origins]))
 
 
 settings = Settings()

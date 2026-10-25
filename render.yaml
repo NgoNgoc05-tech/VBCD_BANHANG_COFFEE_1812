@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: phin-bean-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        value: sqlite:///./shop.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false

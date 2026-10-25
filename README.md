@@ -86,6 +86,31 @@ npm run dev
 
 Frontend mặc định chạy tại `http://localhost:5173`.
 
+## Triển khai (Deploy)
+
+### Backend trên Render
+
+1. Đẩy repository lên GitHub và tạo một **Blueprint** mới trên Render, trỏ đến repository này. Render sẽ đọc cấu hình từ `render.yaml` ở thư mục gốc.
+2. Xác nhận service `phin-bean-api` dùng gói **Free**, `rootDir: backend`, Python `3.12.8`; Blueprint chạy `pip install -r requirements.txt` và `bash start.sh`.
+3. Nhập `GEMINI_API_KEY` nếu muốn bật Gemini; có thể để trống để chatbot dùng chế độ dự phòng. `SECRET_KEY` được Render tự tạo. Blueprint tạo các thiết lập ban đầu cho SQLite và Gemini.
+4. Sau khi frontend đã được deploy lên Vercel, vào **Environment** của Render và đặt `FRONTEND_ORIGINS` thành domain frontend, ví dụ `https://ten-du-an.vercel.app` (nhiều domain phân tách bằng dấu phẩy). Lưu thay đổi và deploy lại service.
+5. Sao chép domain backend Render, ví dụ `https://phin-bean-api.onrender.com`.
+
+`start.sh` chạy migration, seed dữ liệu mẫu, tạo admin nếu chưa có, rồi khởi động Uvicorn trên cổng `PORT` Render cấp. Các lệnh seed và tạo admin có thể chạy lại mà không tạo bản ghi trùng.
+
+### Frontend trên Vercel
+
+1. Tạo project Vercel từ cùng repository và đặt **Root Directory** là `frontend`.
+2. Giữ cấu hình build mặc định của Vite (`npm run build`, output `dist`).
+3. Mở `frontend/vercel.json`, thay `BACKEND_URL` trong hai rewrite `/api/(.*)` và `/static/(.*)` bằng domain Render vừa sao chép, không thêm dấu `/` cuối. Ví dụ destination bắt đầu bằng `https://phin-bean-api.onrender.com/...`.
+4. Deploy lại frontend. Các request API sử dụng đường dẫn cùng origin `/api/...`; Vercel chuyển tiếp API và ảnh tải lên qua rewrite. Rewrite SPA còn lại phục vụ `/index.html` cho các route như `/products`, `/admin` khi tải lại trực tiếp.
+
+### Giới hạn gói miễn phí
+
+- Web service miễn phí của Render có thể ngủ sau khoảng 15 phút không có request; request đầu tiên sau khi ngủ có thể phải đợi service khởi động.
+- Filesystem của service miễn phí là tạm thời. SQLite, ảnh upload và mọi dữ liệu được ghi tại runtime có thể mất/reset khi service khởi động lại hoặc deploy lại. Đây là giới hạn của môi trường demo, không dùng cho dữ liệu production cần lưu bền vững.
+- Domain Render và Vercel cần được điền đúng vào rewrite và `FRONTEND_ORIGINS` sau khi có URL triển khai thực tế.
+
 ### Chạy nhanh
 
 Từ thư mục gốc, chạy:
@@ -166,4 +191,3 @@ Các endpoint quản trị yêu cầu quyền admin. Endpoint có dấu `*` yêu
 | GET, POST, PUT, DELETE | `/api/admin/categories` | Quản lý danh mục | Admin |
 | GET, PATCH | `/api/admin/orders` | Danh sách, chi tiết và cập nhật trạng thái đơn | Admin |
 | GET | `/api/admin/customers` | Danh sách khách hàng | Admin |
-
