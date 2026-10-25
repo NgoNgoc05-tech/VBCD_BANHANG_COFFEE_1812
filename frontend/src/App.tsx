@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
+import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom"
 import { Toaster } from "sonner"
 import { useEffect } from "react"
+import { Coffee, Home as HomeIcon } from "lucide-react"
 import { AdminRoute, ProtectedRoute } from "./components/auth/ProtectedRoute"
 import AdminLayout from "./components/admin/AdminLayout"
 import ChatWidget from "./components/chat/ChatWidget"
@@ -37,6 +38,48 @@ const queryClient = new QueryClient({
   },
 })
 
+function getPageTitle(pathname: string) {
+  if (pathname === "/") return "Trang chủ"
+  if (pathname === "/products") return "Sản phẩm"
+  if (pathname.startsWith("/products/")) return "Chi tiết sản phẩm"
+  if (pathname === "/cart") return "Giỏ hàng"
+  if (pathname === "/checkout") return "Thanh toán"
+  if (pathname.startsWith("/order-success/")) return "Đặt hàng thành công"
+  if (pathname === "/login") return "Đăng nhập"
+  if (pathname === "/register") return "Đăng ký"
+  if (pathname === "/account") return "Tài khoản"
+  if (pathname === "/account/orders") return "Đơn hàng của tôi"
+  if (pathname.startsWith("/account/orders/")) return "Chi tiết đơn hàng"
+  if (pathname === "/admin") return "Tổng quan"
+  if (pathname === "/admin/products") return "Quản lý sản phẩm"
+  if (pathname === "/admin/categories") return "Quản lý danh mục"
+  if (pathname === "/admin/orders") return "Quản lý đơn hàng"
+  if (pathname === "/admin/customers") return "Khách hàng"
+  return "Không tìm thấy trang"
+}
+
+function NotFound() {
+  return (
+    <main className="mx-auto flex min-h-[55vh] max-w-3xl items-center justify-center px-4 py-16 text-center">
+      <div className="max-w-md">
+        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-primary">
+          <Coffee aria-hidden="true" className="h-10 w-10" />
+        </span>
+        <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Phin &amp; Bean</p>
+        <h1 className="mt-3 text-3xl font-bold">Trang này chưa được pha</h1>
+        <p className="mt-3 text-muted-foreground">Đường dẫn bạn tìm có thể đã thay đổi hoặc không tồn tại.</p>
+        <Link
+          to="/"
+          className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <HomeIcon aria-hidden="true" className="h-4 w-4" />
+          Về trang chủ
+        </Link>
+      </div>
+    </main>
+  )
+}
+
 function AppLayout() {
   const location = useLocation()
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register"
@@ -56,9 +99,14 @@ function AppLayout() {
     }
   }, [])
 
+  useEffect(() => {
+    document.title = `${getPageTitle(location.pathname)} | Phin & Bean`
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [location.pathname])
+
   return (
     <div className={`flex min-h-screen flex-col bg-background ${
-      isCheckout || location.pathname.startsWith("/admin") ? "" : "pb-16 md:pb-0"
+      isCheckout || isAdminArea ? "" : "pb-36 md:pb-0"
     }`}>
       {!isAuthPage && !isAdminArea && <Header />}
       <div className="flex-1">
@@ -115,8 +163,9 @@ function AppLayout() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="customers" element={<AdminCustomers />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="*" element={<main className="mx-auto flex min-h-[45vh] max-w-7xl items-center justify-center px-4 py-16"><div className="text-center"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Phin &amp; Bean</p><h1 className="mt-3 text-2xl font-semibold">Trang này không tồn tại</h1></div></main>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {!isAuthPage && !isCheckout && !isAdminArea && <Footer />}

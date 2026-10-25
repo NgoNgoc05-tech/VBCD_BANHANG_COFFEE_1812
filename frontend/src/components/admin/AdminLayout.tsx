@@ -102,9 +102,9 @@ export default function AdminLayout() {
         {sidebar}
       </aside>
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="admin-drawer-overlay fixed inset-0 z-50 md:hidden">
           <button type="button" className="absolute inset-0 bg-black/45" aria-label="Đóng menu" onClick={() => setDrawerOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-[min(82vw,300px)] bg-[#34251d] text-white">{sidebar}</aside>
+          <aside className="admin-drawer-panel absolute inset-y-0 left-0 w-[min(82vw,300px)] bg-[#34251d] text-white">{sidebar}</aside>
         </div>
       )}
       <div className={`min-h-screen transition-[padding] ${collapsed ? "md:pl-[76px]" : "md:pl-64"}`}>

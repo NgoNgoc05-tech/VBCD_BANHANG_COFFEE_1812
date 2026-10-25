@@ -81,6 +81,94 @@
     background-color: var(--background);
     color: var(--foreground);
   }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes ui-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ui-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes ui-dialog-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes ui-dialog-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -48%) scale(0.98); }
+}
+
+@keyframes ui-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ui-slide-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes ui-slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ui-slide-out-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes ui-slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes ui-popover-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.admin-drawer-overlay { animation: ui-fade-in 160ms ease-out both; }
+.admin-drawer-panel { animation: ui-slide-in-left 200ms ease-out both; }
+.ui-search-dropdown { animation: ui-popover-in 160ms ease-out both; }
+.ui-mobile-search { animation: ui-fade-in 180ms ease-out both; }
+.ui-chat-window { animation: ui-popover-in 200ms ease-out both; }
+
+@keyframes ui-slide-out-bottom {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.ui-overlay[data-state="open"] { animation: ui-fade-in 180ms ease-out both; }
+.ui-overlay[data-state="closed"] { animation: ui-fade-out 150ms ease-in both; }
+.ui-dialog-content[data-state="open"] { animation: ui-dialog-in 180ms ease-out both; }
+.ui-dialog-content[data-state="closed"] { animation: ui-dialog-out 150ms ease-in both; }
+.ui-sheet-content.sheet-right[data-state="open"] { animation: ui-slide-in-right 200ms ease-out both; }
+.ui-sheet-content.sheet-right[data-state="closed"] { animation: ui-slide-out-right 160ms ease-in both; }
+.ui-sheet-content.sheet-left[data-state="open"] { animation: ui-slide-in-left 200ms ease-out both; }
+.ui-sheet-content.sheet-left[data-state="closed"] { animation: ui-slide-out-left 160ms ease-in both; }
+.ui-sheet-content.sheet-bottom[data-state="open"] { animation: ui-slide-in-bottom 200ms ease-out both; }
+.ui-sheet-content.sheet-bottom[data-state="closed"] { animation: ui-slide-out-bottom 160ms ease-in both; }
+.ui-dropdown-content[data-state="open"] { animation: ui-fade-in 150ms ease-out both; }
+.ui-dropdown-content[data-state="closed"] { animation: ui-fade-out 120ms ease-in both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* --- Custom scrollbar --- */
@@ -124,4 +212,3 @@
   font-family: "Be Vietnam Pro", "Noto Sans SVN", "Helvetica Neue", Arial,
     sans-serif !important;
 }
-

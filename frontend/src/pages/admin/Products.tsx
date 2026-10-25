@@ -157,7 +157,7 @@ export default function Products() {
         <Button onClick={beginCreate}><Plus aria-hidden="true" /> Thêm sản phẩm</Button>
       </div>
       <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_190px]">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_190px]">
           <label className="relative">
             <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1) }} placeholder="Tìm tên sản phẩm..." className="pl-9" />

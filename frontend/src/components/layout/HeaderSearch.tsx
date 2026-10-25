@@ -101,7 +101,7 @@ export default function HeaderSearch() {
           id="header-search-suggestions"
           role="listbox"
           aria-label="Gợi ý sản phẩm"
-          className={`${mobile ? "fixed left-4 right-4 top-[4.5rem]" : "absolute left-0 right-0 top-[calc(100%+0.5rem)] min-w-[320px]"} z-[80] overflow-hidden rounded-2xl border border-border bg-popover p-2 text-popover-foreground shadow-medium`}
+          className={`ui-search-dropdown ${mobile ? "fixed left-4 right-4 top-[4.5rem]" : "absolute left-0 right-0 top-[calc(100%+0.5rem)] min-w-[320px]"} z-[80] overflow-hidden rounded-2xl border border-border bg-popover p-2 text-popover-foreground shadow-medium`}
         >
           {suggestionsQuery.isPending ? (
             <p className="px-3 py-4 text-sm text-muted-foreground">Đang tìm sản phẩm...</p>
@@ -171,7 +171,7 @@ export default function HeaderSearch() {
         <Search aria-hidden="true" className="h-5 w-5" />
       </button>
       {mobileOpen && (
-        <div className="fixed inset-0 z-[75] bg-background p-4 md:hidden">
+        <div className="ui-mobile-search fixed inset-0 z-[75] bg-background p-4 md:hidden">
           <div className="mb-5 flex items-center gap-3">
             <button
               type="button"

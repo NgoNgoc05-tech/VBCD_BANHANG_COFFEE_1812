@@ -153,7 +153,7 @@ export default function ChatWidget() {
       {isOpen && (
         <section
           aria-label="Trợ lý Phin & Bean"
-          className="fixed inset-0 z-[60] flex h-[100dvh] flex-col overflow-hidden bg-background shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(560px,calc(100dvh-7rem))] md:w-[380px] md:rounded-2xl md:border md:border-border"
+          className="ui-chat-window fixed inset-0 z-[60] flex h-[100dvh] flex-col overflow-hidden bg-background shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(560px,calc(100dvh-7rem))] md:w-[380px] md:rounded-2xl md:border md:border-border"
         >
           <header className="flex shrink-0 items-center justify-between bg-primary px-4 py-3.5 text-primary-foreground">
             <div className="flex items-center gap-3">

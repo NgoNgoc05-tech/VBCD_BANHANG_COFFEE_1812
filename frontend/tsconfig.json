@@ -20,7 +20,6 @@
     "allowJs": false,
     "checkJs": false,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
