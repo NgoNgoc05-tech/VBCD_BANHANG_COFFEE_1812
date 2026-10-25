@@ -23,34 +23,33 @@ def get_db() -> Generator[Session, None, None]:
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db),
-) -> User | None:
-    """Trích xuất user hiện tại từ JWT. Trả về None nếu chưa đăng nhập."""
+) -> User:
+    """Validate the bearer token and load its user."""
+    unauthorized = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Vui lòng đăng nhập để thực hiện hành động này.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     if credentials is None:
-        return None
+        raise unauthorized
     payload = decode_access_token(credentials.credentials)
-    if payload is None or payload.sub is None:
-        return None
-    user = db.query(User).filter(User.id == int(payload.sub)).first()
+    if payload is None:
+        raise unauthorized
+    user = db.query(User).filter(User.id == payload.sub).first()
+    if user is None:
+        raise unauthorized
     return user
 
 
 def require_user(
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ) -> User:
-    """
-    Dependency bắt buộc phải đăng nhập.
-    Dùng cho các endpoint cần xác thực.
-    """
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Vui lòng đăng nhập để thực hiện hành động này.",
-        )
+    """Compatibility dependency for endpoints requiring authentication."""
     return user
 
 
 def require_admin(
-    user: User = Depends(require_user),
+    user: User = Depends(get_current_user),
 ) -> User:
     """
     Dependency bắt buộc role=admin.

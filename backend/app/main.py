@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import health
+from app.routers import auth, catalog, chat, health
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0", docs_url="/docs")
 
@@ -17,6 +17,9 @@ app.add_middleware(
 
 # Router health check (public)
 app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(catalog.router)
+app.include_router(chat.router)
 
 
 @app.get("/", tags=["Root"])

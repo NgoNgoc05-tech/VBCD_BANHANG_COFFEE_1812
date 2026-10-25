@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # --- Gemini (AI Chatbot) ---
     GEMINI_API_KEY: str | None = None
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
 
     class Config:
         env_file = ".env"

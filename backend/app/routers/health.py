@@ -1,5 +1,6 @@
 """Health check router - endpoint public để kiểm tra server + DB."""
 from fastapi import APIRouter
+from sqlalchemy import text
 from app.db.session import engine
 
 router = APIRouter()
@@ -12,7 +13,7 @@ def health_check():
     """
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as e:
         return {"status": "error", "database": str(e)}
