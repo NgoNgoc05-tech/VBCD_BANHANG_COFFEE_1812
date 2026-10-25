@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
 import { Toaster } from "sonner"
 import { AdminRoute, ProtectedRoute } from "./components/auth/ProtectedRoute"
+import ChatWidget from "./components/chat/ChatWidget"
 import Footer from "./components/layout/Footer"
 import Header from "./components/layout/Header"
 import Login from "./pages/auth/Login"
@@ -69,6 +70,7 @@ function AppLayout() {
       </div>
       {!isAuthPage && <Footer />}
       <Toaster position="top-right" richColors />
+      <ChatWidget />
     </div>
   )
 }

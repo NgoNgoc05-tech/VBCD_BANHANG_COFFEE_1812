@@ -1,4 +1,4 @@
-import { Coffee, LogOut, ShoppingBag } from "lucide-react"
+import { Coffee, LogOut, Package, Shield, ShoppingBag, UserRound } from "lucide-react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import {
   DropdownMenu,
@@ -80,19 +80,28 @@ export default function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/account">Tài khoản</Link>
+                  <Link to="/account">
+                    <UserRound aria-hidden="true" />
+                    Tài khoản
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders">Đơn hàng của tôi</Link>
+                  <Link to="/orders">
+                    <Package aria-hidden="true" />
+                    Đơn hàng của tôi
+                  </Link>
                 </DropdownMenuItem>
                 {user.role === "admin" && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin">Quản trị</Link>
+                    <Link to="/admin">
+                      <Shield aria-hidden="true" />
+                      Quản trị
+                    </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={signOut} className="text-destructive focus:text-destructive">
-                  <LogOut aria-hidden="true" className="mr-2 h-4 w-4" />
+                  <LogOut aria-hidden="true" />
                   Đăng xuất
                 </DropdownMenuItem>
               </DropdownMenuContent>
