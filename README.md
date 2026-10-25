@@ -114,8 +114,23 @@ Chatbot vẫn tư vấn bằng chế độ dự phòng khi chưa có API key Gem
 
 Lưu ảnh tại `docs/screenshots/`, sau đó thay các dòng ghi chú dưới đây bằng ảnh thực tế:
 
-<!-- Thêm ảnh trang chủ: docs/screenshots/trang-chu.png -->
-<!-- Thêm ảnh quản trị: docs/screenshots/admin-dashboard.png -->
+### Trang chủ
+![Trang chủ](docs/screenshots/trang_chu.png)
+
+### Danh mục
+![Danh mục](docs/screenshots/danh_muc.png)
+
+### Danh sách sản phẩm
+![Sản phẩm](docs/screenshots/san_pham.png)
+
+### Giỏ hàng
+![Giỏ hàng](docs/screenshots/gio_hang.png)
+
+### Chatbot tư vấn AI
+![Chatbot](docs/screenshots/chat_bot.png)
+
+### Thanh toán
+![Thanh toán](docs/screenshots/thanh_toan.png)
 
 ## API chính
 
