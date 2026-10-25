@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://BACKEND_URL/api/$1"
+      "destination": "https://phin-bean-api.onrender.com/api/$1"
     },
     {
       "source": "/static/(.*)",
-      "destination": "https://BACKEND_URL/static/$1"
+      "destination": "https://phin-bean-api.onrender.com/static/$1"
     },
     {
       "source": "/(.*)",
