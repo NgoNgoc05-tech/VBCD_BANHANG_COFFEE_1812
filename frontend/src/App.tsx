@@ -1,8 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
 import { Toaster } from "sonner"
+import { AdminRoute, ProtectedRoute } from "./components/auth/ProtectedRoute"
 import Footer from "./components/layout/Footer"
 import Header from "./components/layout/Header"
+import Login from "./pages/auth/Login"
+import Register from "./pages/auth/Register"
+import Account from "./pages/customer/Account"
 import Home from "./pages/customer/Home"
 
 const queryClient = new QueryClient({
@@ -33,16 +37,37 @@ function RoutePlaceholder() {
 }
 
 function AppLayout() {
+  const location = useLocation()
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register"
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header />
+      {!isAuthPage && <Header />}
       <div className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <Account />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <RoutePlaceholder />
+              </AdminRoute>
+            }
+          />
           <Route path="*" element={<RoutePlaceholder />} />
         </Routes>
       </div>
-      <Footer />
+      {!isAuthPage && <Footer />}
       <Toaster position="top-right" richColors />
     </div>
   )

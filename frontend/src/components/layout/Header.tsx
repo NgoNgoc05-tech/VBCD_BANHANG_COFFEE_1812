@@ -1,5 +1,14 @@
-import { Coffee, ShoppingBag, UserRound } from "lucide-react"
-import { Link, NavLink } from "react-router-dom"
+import { Coffee, LogOut, ShoppingBag } from "lucide-react"
+import { Link, NavLink, useNavigate } from "react-router-dom"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu"
+import { useAuthStore } from "../../stores/authStore"
+import { toast } from "sonner"
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm font-medium transition-colors hover:text-primary ${
@@ -7,6 +16,15 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export default function Header() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuthStore()
+
+  const signOut = () => {
+    logout()
+    toast.success("Bạn đã đăng xuất.")
+    navigate("/")
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
@@ -44,13 +62,49 @@ export default function Header() {
           >
             <ShoppingBag aria-hidden="true" className="h-5 w-5" />
           </Link>
-          <Link
-            to="/account"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-secondary"
-          >
-            <UserRound aria-hidden="true" className="h-4 w-4" />
-            <span className="hidden sm:inline">Tài khoản</span>
-          </Link>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Tài khoản ${user.full_name}`}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {user.full_name.trim().charAt(0).toLocaleUpperCase("vi-VN")}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="truncate text-sm font-semibold">{user.full_name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/account">Tài khoản</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/orders">Đơn hàng của tôi</Link>
+                </DropdownMenuItem>
+                {user.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">Quản trị</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={signOut} className="text-destructive focus:text-destructive">
+                  <LogOut aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/login"
+              className="inline-flex h-10 items-center rounded-full border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-secondary"
+            >
+              Đăng nhập
+            </Link>
+          )}
         </div>
       </div>
       <nav aria-label="Điều hướng di động" className="flex border-t border-border/70 md:hidden">

@@ -6,8 +6,16 @@ export interface User {
   id: number;
   full_name: string;
   email: string;
+  phone?: string | null;
+  address?: string | null;
   role: "customer" | "admin";
   created_at: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
 }
 
 export interface Category {
